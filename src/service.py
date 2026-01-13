@@ -59,9 +59,7 @@ def create_jwt_token(user_id: str):
     return token
 
 
-@bentoml.service(
-    middlewares=[JWTAuthMiddleware]
-)
+@bentoml.service
 class ModelService:
     def __init__(self) -> None:
         # Load the model using bentoml sklearn API
