@@ -4,3 +4,4 @@
 /clean_data.csv
 .venv
 *.csv
+__pycache__/
