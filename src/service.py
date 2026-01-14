@@ -18,6 +18,7 @@ USERS = {
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):
+    #TODO: remove
     async def dispatch(self, request, call_next):
         if request.url.path == "/predict":
             token = request.headers.get("Authorization")
@@ -99,19 +100,3 @@ class ModelService:
         }
 
 # bentoml serve src.service:ModelService --port 3001
-
-'''
-curl -X POST http://127.0.0.1:3001/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "input_data": {
-        "gre": 320,
-        "toefl": 110,
-        "univ_rating": 4,
-        "sop": 4.5,
-        "lor": 4.0,
-        "cgpa": 9.0,
-        "research": 1
-    }
-  }'
-'''

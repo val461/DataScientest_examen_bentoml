@@ -50,3 +50,19 @@ if login_response.status_code == 200:
     print("Réponse de l'API de prédiction:", response.text)
 else:
     print("Erreur lors de la connexion:", login_response.text)
+
+'''
+curl -X POST http://127.0.0.1:3001/predict \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_data": {
+        "gre": 320,
+        "toefl": 110,
+        "univ_rating": 4,
+        "sop": 4.5,
+        "lor": 4.0,
+        "cgpa": 9.0,
+        "research": 1
+    }
+  }'
+'''
