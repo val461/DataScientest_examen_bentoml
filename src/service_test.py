@@ -1,6 +1,6 @@
 # pytest-9.0.2
 
-import requests
+import requests, jwt, pytest
 
 
 @pytest.fixture
@@ -37,9 +37,16 @@ def valid_login_payload():
         }
     }
 
+@pytest.fixture
+def JWT_SECRET_KEY():
+    return "your_jwt_secret_key_here"
+
+@pytest.fixture
+def JWT_ALGORITHM():
+    return "HS256"
+
 """
 Test de l'API de connexion :
-    Vérifiez que l'API renvoie un jeton JWT valide pour des identifiants utilisateur corrects.
     Vérifiez que l'API renvoie une erreur 401 pour des identifiants utilisateur incorrects.
 
 Test de l'API de prédiction :
@@ -49,18 +56,66 @@ Test de l'API de prédiction :
     Vérifiez que l'API renvoie une erreur pour des données d'entrée invalides.
 """
 
-def test_receive_valid_jwt(login_url, valid_login_payload):
-    #TODO
+def test_receive_valid_jwt(login_url, valid_login_payload, JWT_SECRET_KEY, JWT_ALGORITHM):
     login_response = requests.post(
         login_url,
         headers={"Content-Type": "application/json"},
         json=valid_login_payload
     )
-
+    valid=True
     # Check if the login was successful
     if login_response.status_code == 200:
-        token = login_response.json().get("token")
-        print("Token JWT obtenu:", token)
+        token = login_response.json().get("token","")
+
+        # Check token is valid
+        try:
+            # On gère le cas "Bearer <token>" ou juste "<token>"
+            parts = token.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token_val = parts[1]
+            else:
+                token_val = token
+
+            jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+        except jwt.ExpiredSignatureError:
+            valid=False
+        except jwt.InvalidTokenError:
+            valid=False
+    else:
+        valid=False
+    assert valid
+
+
+def test_wrong_credentials(login_url, valid_login_payload, JWT_SECRET_KEY, JWT_ALGORITHM): #TODO
+    login_response = requests.post(
+        login_url,
+        headers={"Content-Type": "application/json"},
+        json=valid_login_payload
+    )
+    valid=True
+    # Check if the login was successful
+    if login_response.status_code == 200:
+        token = login_response.json().get("token","")
+
+        # Check token is valid
+        try:
+            # On gère le cas "Bearer <token>" ou juste "<token>"
+            parts = token.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token_val = parts[1]
+            else:
+                token_val = token
+
+            jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+        except jwt.ExpiredSignatureError:
+            valid=False
+        except jwt.InvalidTokenError:
+            valid=False
+    else:
+        valid=False
+    assert valid
 
 
 def test_jwt_missing_or_invalid(predict_url, valid_prediction_payload):
