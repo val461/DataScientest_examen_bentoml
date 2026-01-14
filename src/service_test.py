@@ -47,18 +47,7 @@ def wrong_login_payload():
         }
     }
 
-@pytest.fixture
-def JWT_SECRET_KEY():
-    return "your_jwt_secret_key_here"
-
-@pytest.fixture
-def JWT_ALGORITHM():
-    return "HS256"
-
 """
-Test de l'API de connexion :
-    Vérifiez que l'API renvoie une erreur 401 pour des identifiants utilisateur incorrects.
-
 Test de l'API de prédiction :
     Vérifiez que l'authentification réussit avec un jeton JWT valide.
     Vérifiez que l'authentification échoue si le jeton JWT a expiré.
@@ -67,7 +56,7 @@ Test de l'API de prédiction :
 """
 
 
-def test_receive_valid_jwt(login_url, valid_login_payload, JWT_SECRET_KEY, JWT_ALGORITHM):
+def test_receive_valid_jwt(login_url, valid_login_payload):
     login_response = requests.post(
         login_url,
         headers={"Content-Type": "application/json"},
