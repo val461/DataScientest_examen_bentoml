@@ -2,41 +2,68 @@
 
 import requests
 
-# The URL of the login and prediction endpoints
-login_url = "http://127.0.0.1:3001/login"
-predict_url = "http://127.0.0.1:3001/predict"
+
+@pytest.fixture
+def login_url():
+    return "http://127.0.0.1:3001/login"
+
+
+@pytest.fixture
+def predict_url():
+    return "http://127.0.0.1:3001/predict"
+
+
+@pytest.fixture
+def valid_prediction_payload():
+    return {
+        "input_data": {
+            "gre": 320,
+            "toefl": 110,
+            "univ_rating": 4,
+            "sop": 4.5,
+            "lor": 4.0,
+            "cgpa": 9.0,
+            "research": 1
+        }
+    }
+
+
+@pytest.fixture
+def valid_login_payload():
+    return {
+        "credentials": {
+            "username": "user123",
+            "password": "password123"
+        }
+    }
 
 """
-Test de l'authentification JWT :
-    Vérifiez que l'authentification échoue si le jeton JWT est manquant ou invalide.
-    Vérifiez que l'authentification échoue si le jeton JWT a expiré.
-    Vérifiez que l'authentification réussit avec un jeton JWT valide.
-
 Test de l'API de connexion :
     Vérifiez que l'API renvoie un jeton JWT valide pour des identifiants utilisateur corrects.
     Vérifiez que l'API renvoie une erreur 401 pour des identifiants utilisateur incorrects.
 
 Test de l'API de prédiction :
-    Vérifiez que l'API renvoie une erreur 401 si le jeton JWT est manquant ou invalide.
+    Vérifiez que l'authentification réussit avec un jeton JWT valide.
+    Vérifiez que l'authentification échoue si le jeton JWT a expiré.
     Vérifiez que l'API renvoie une prédiction valide pour des données d'entrée correctes.
     Vérifiez que l'API renvoie une erreur pour des données d'entrée invalides.
 """
 
-# Data to be sent to the prediction endpoint
-valid_prediction_payload = {
-    "input_data": {
-        "gre": 320,
-        "toefl": 110,
-        "univ_rating": 4,
-        "sop": 4.5,
-        "lor": 4.0,
-        "cgpa": 9.0,
-        "research": 1
-    }
-}
+def test_receive_valid_jwt(login_url, valid_login_payload):
+    #TODO
+    login_response = requests.post(
+        login_url,
+        headers={"Content-Type": "application/json"},
+        json=valid_login_payload
+    )
+
+    # Check if the login was successful
+    if login_response.status_code == 200:
+        token = login_response.json().get("token")
+        print("Token JWT obtenu:", token)
 
 
-def test_jwt_missing_or_invalid():
+def test_jwt_missing_or_invalid(predict_url, valid_prediction_payload):
     token = "invalid"
     response = requests.post(
         predict_url,
@@ -46,6 +73,5 @@ def test_jwt_missing_or_invalid():
         },
         json=valid_prediction_payload
     )
-    print("Réponse de l'API de prédiction:", response.text)
-    #FIXME
-    assert False
+    assert response.status_code==401
+
