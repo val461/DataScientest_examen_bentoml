@@ -27,8 +27,8 @@ class InputModel(BaseModel):
     research: int
 
 
-def create_jwt_token(user_id: str):
-    expiration = datetime.utcnow() + timedelta(hours=1)
+def create_jwt_token(user_id: str, expiration_in_hours=1):
+    expiration = datetime.utcnow() + timedelta(hours=expiration_in_hours)
     payload = {
         "sub": user_id,
         "exp": expiration

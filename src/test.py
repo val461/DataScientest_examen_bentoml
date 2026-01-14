@@ -47,7 +47,7 @@ if login_response.status_code == 200:
         json=prediction_payload
     )
 
-    print("Réponse de l'API de prédiction:", response.text)
+    print("Réponse de l'API de prédiction:", response.text, response.status_code)
 else:
     print("Erreur lors de la connexion:", login_response.text)
 
