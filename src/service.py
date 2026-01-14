@@ -2,7 +2,6 @@ import bentoml
 import numpy as np
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
 import jwt
 from datetime import datetime, timedelta
 
@@ -15,28 +14,6 @@ USERS = {
     "user123": "password123",
     "user456": "password456"
 }
-
-
-class JWTAuthMiddleware(BaseHTTPMiddleware):
-    #TODO: remove
-    async def dispatch(self, request, call_next):
-        if request.url.path == "/predict":
-            token = request.headers.get("Authorization")
-            if not token:
-                return JSONResponse(status_code=401, content={"detail": "Missing authentication token"})
-
-            try:
-                token = token.split()[1]  # Remove 'Bearer ' prefix
-                payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-            except jwt.ExpiredSignatureError:
-                return JSONResponse(status_code=401, content={"detail": "Token has expired"})
-            except jwt.InvalidTokenError:
-                return JSONResponse(status_code=401, content={"detail": "Invalid token"})
-
-            request.state.user = payload.get("sub")
-
-        response = await call_next(request)
-        return response
 
 
 # Pydantic model to validate input data
@@ -80,7 +57,31 @@ class ModelService:
 
     # Prediction endpoint
     @bentoml.api
-    def predict(self, input_data: InputModel) -> dict:
+    def predict(self, input_data: InputModel, ctx: bentoml.Context = None) -> dict:
+        request = ctx.request
+        token = request.headers.get("Authorization")
+
+        if not token:
+            ctx.response.status_code = 401
+            return {"detail": "Missing authentication token"}
+
+        try:
+            # On gère le cas "Bearer <token>" ou juste "<token>"
+            parts = token.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token_val = parts[1]
+            else:
+                token_val = token
+
+            jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+        except jwt.ExpiredSignatureError:
+            ctx.response.status_code = 401
+            return {"detail": "Token has expired"}
+        except jwt.InvalidTokenError:
+            ctx.response.status_code = 401
+            return {"detail": "Invalid token"}
+
         # Convert the input data to a numpy array
         input_series = np.array([
             input_data.gre,
