@@ -37,6 +37,23 @@ def create_jwt_token(user_id: str):
     return token
 
 
+def check_token(token):
+    try:
+        # On gère le cas "Bearer <token>" ou juste "<token>"
+        parts = token.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token_val = parts[1]
+        else:
+            token_val = token
+
+        jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+    except jwt.ExpiredSignatureError:
+        return "expired"
+    except jwt.InvalidTokenError:
+        return "invalid"
+    return "ok"
+
 @bentoml.service
 class ModelService:
     def __init__(self) -> None:
@@ -65,22 +82,17 @@ class ModelService:
             ctx.response.status_code = 401
             return {"detail": "Missing authentication token"}
 
-        try:
-            # On gère le cas "Bearer <token>" ou juste "<token>"
-            parts = token.split()
-            if len(parts) == 2 and parts[0].lower() == "bearer":
-                token_val = parts[1]
-            else:
-                token_val = token
-
-            jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-
-        except jwt.ExpiredSignatureError:
+        token_validity = check_token(token)
+        if token_validity=="expired":
             ctx.response.status_code = 401
             return {"detail": "Token has expired"}
-        except jwt.InvalidTokenError:
+        elif token_validity=="invalid":
             ctx.response.status_code = 401
             return {"detail": "Invalid token"}
+        elif token_validity=="ok":
+            pass
+        else:
+            raise ValueError
 
         # Convert the input data to a numpy array
         input_series = np.array([
