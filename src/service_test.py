@@ -1,7 +1,40 @@
 # pytest-9.0.2
 
 import requests, jwt, pytest
-from src.service import check_token, create_jwt_token
+from datetime import datetime, timedelta
+
+# from src.service import check_token, create_jwt_token
+
+JWT_SECRET_KEY = "your_jwt_secret_key_here"
+JWT_ALGORITHM = "HS256"
+
+
+def create_jwt_token(user_id: str, expiration_in_hours=1):
+    expiration = datetime.utcnow() + timedelta(hours=expiration_in_hours)
+    payload = {
+        "sub": user_id,
+        "exp": expiration
+    }
+    token = jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return token
+
+
+def check_token(token):
+    try:
+        # On gère le cas "Bearer <token>" ou juste "<token>"
+        parts = token.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token_val = parts[1]
+        else:
+            token_val = token
+
+        jwt.decode(token_val, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+
+    except jwt.ExpiredSignatureError:
+        return "expired"
+    except jwt.InvalidTokenError:
+        return "invalid"
+    return "ok"
 
 
 @pytest.fixture

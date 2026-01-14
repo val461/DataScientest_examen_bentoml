@@ -1,28 +1,22 @@
-# Examen BentoML
+Toutes les commandes à exécuter dans l'ordre pour décompresser les fichiers et faire fonctionner votre API conteneurisée avec bentoml.
+Les commandes à exécuter pour lancer les tests unitaires sur votre API qui devront tous retourner le status PASSED.
 
-Ce repertoire contient l'architecture basique afin de rendre l'évaluation pour l'examen BentoML.
+# Prérequis
 
-Vous êtes libres d'ajouter d'autres dossiers ou fichiers si vous jugez utile de le faire.
+- Docker installé
+- Python 3 installé.
 
-Voici comment est construit le dossier de rendu de l'examen:
+Ci-dessous, remplacer FOLDER par le chemin absolu du dossier contenant les 3 livrables dont ce README.
 
-```bash       
-├── examen_bentoml          
-│   ├── data       
-│   │   ├── processed      
-│   │   └── raw           
-│   ├── models      
-│   ├── src       
-│   └── README.md
-```
+# Terminal 1
 
-Afin de pouvoir commencer le projet vous devez suivre les étapes suivantes:
+cd FOLDER
+docker load -i bento_image.tar
+docker run --rm -p 3001:3000 marie_admission_service:67s23ghrisru2bqk
 
-- Forker le projet sur votre compte github
+# Terminal 2
 
-- Cloner le projet sur votre machine
-
-- Récuperer le jeu de données à partir du lien suivant: [Lien de téléchargement]( https://datascientest.s3-eu-west-1.amazonaws.com/examen_bentoml/admissions.csv)
-
-
-Bon travail!
+cd FOLDER
+python -m venv .venv
+pip install PyJWT==2.10.1 pytest==9.0.2 requests==2.32.5
+python -m pytest service_test.py
