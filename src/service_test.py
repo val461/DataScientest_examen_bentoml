@@ -38,6 +38,7 @@ def valid_login_payload():
         }
     }
 
+
 @pytest.fixture
 def wrong_login_payload():
     return {
@@ -46,6 +47,25 @@ def wrong_login_payload():
             "password": "password123"
         }
     }
+
+
+@pytest.fixture
+def valid_jwt_token(login_url, valid_login_payload):
+    # Send a POST request to the login endpoint
+    login_response = requests.post(
+        login_url,
+        headers={"Content-Type": "application/json"},
+        json=valid_login_payload
+    )
+    # Check if the login was successful
+    if login_response.status_code == 200:
+        token = login_response.json().get("token")
+        if token is None:
+            raise ValueError
+        else:
+            return token
+    else:
+        raise ValueError
 
 """
 Test de l'API de prédiction :
@@ -102,3 +122,14 @@ def test_jwt_missing_or_invalid(predict_url, valid_prediction_payload):
     )
     assert response.status_code==401
 
+
+def test_auth_with_valid_jwt(predict_url, valid_prediction_payload, valid_jwt_token):
+    response = requests.post(
+        predict_url,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {valid_jwt_token}"
+        },
+        json=valid_prediction_payload
+    )
+    assert response.status_code==200
